@@ -12,6 +12,20 @@ export default function App() {
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
 
+
+  const salvarQRCode = ({type, data})=>{
+    fetch('https://f64f-2804-7518-49a8-9e00-c984-8d5e-8760-20fc.ngrok-free.app/api/qrcode', {
+      method: 'post',
+      headers:{
+        'Accept' : 'application/json',
+        'Content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        typeQrCode: type,
+        descQrCode: data
+      })
+    })
+  }
   useEffect(()=>{
     const getBarCodeScannerPermissions = async()=>{
       const {status} = await Camera.requestCameraPermissionsAsync();
@@ -23,13 +37,8 @@ export default function App() {
 
   const handleBarCodeScanned = ({type, data}) =>{
     setScanned(true);
-    Linking.canOpenURL(data).then(supported => {
-   if (supported) {
-      return Linking.openURL(data);
-   } else {
-      return Linking.openURL(data);
-   }
-});
+    salvarQRCode({type, data});
+    alert(`QRCode do tipo ${type} e com a informação "${data}" foi salva no banco!`);
     
   };
 
