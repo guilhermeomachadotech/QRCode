@@ -1,20 +1,22 @@
 import React from 'react-native';
 import { useEffect, useState } from 'react';
-import { CameraView, Camera } from "expo-camera";
+import { CameraView, Camera , CameraType, useCameraPermissions} from "expo-camera";
 
 
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View , Button} from 'react-native';
 import { Linking } from 'react-native';
 
+
 export default function App() {
 
   const [hasPermission, setHasPermission] = useState(null);
+  const [facing, setFacing] =useState('back');
+  const [permissaoCamera, setPermissaoCamera] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
 
-
   const salvarQRCode = ({type, data})=>{
-    fetch('https://f64f-2804-7518-49a8-9e00-c984-8d5e-8760-20fc.ngrok-free.app/api/qrcode', {
+    fetch('https://b7dc-2804-7518-49a8-9e00-4c25-8cac-1a66-26b7.ngrok-free.app/api/qrcode', {
       method: 'post',
       headers:{
         'Accept' : 'application/json',
@@ -26,6 +28,8 @@ export default function App() {
       })
     })
   }
+
+
   useEffect(()=>{
     const getBarCodeScannerPermissions = async()=>{
       const {status} = await Camera.requestCameraPermissionsAsync();
@@ -35,10 +39,34 @@ export default function App() {
     getBarCodeScannerPermissions();
   }, []);
 
+  
+  //Função para a permissão da camera
+  if (!permissaoCamera) {
+    return (
+    <View>
+      <Text>O Acesso a camera foi negada</Text>
+    </View>
+  )
+
+  }
+  if (!permissaoCamera.granted) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.message}>We need your permission to show the camera</Text>
+        <Button onPress={setPermissaoCamera} title="grant permission" />
+      </View>
+    )
+  }
+
+  function toggleCameraFacing() {
+    setFacing(current => (current === 'back' ? 'front' : 'back'));
+  }
+
   const handleBarCodeScanned = ({type, data}) =>{
     setScanned(true);
     salvarQRCode({type, data});
     alert(`QRCode do tipo ${type} e com a informação "${data}" foi salva no banco!`);
+
     
   };
 
@@ -56,7 +84,8 @@ export default function App() {
           onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
           barcodeScannerSettings={{
           
-        }}>
+        }}
+       facing={facing}>
       
       </CameraView>
       {scanned && <Button title={'Clique para escanear de novo'} onPress={()=> setScanned(false)}></Button>}
