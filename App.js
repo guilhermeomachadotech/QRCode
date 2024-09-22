@@ -4,19 +4,19 @@ import { CameraView, Camera , CameraType, useCameraPermissions} from "expo-camer
 
 
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View , Button} from 'react-native';
+import { StyleSheet, Text, View , Button, TouchableOpacity, Image} from 'react-native';
 import { Linking } from 'react-native';
 
-
+import qrcodicon from './assets/code-icon-png.png';
 export default function App() {
-
+  const [facing, setFacing] = useState('back');
   const [hasPermission, setHasPermission] = useState(null);
-  const [facing, setFacing] =useState('back');
+ 
   const [permissaoCamera, setPermissaoCamera] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
 
   const salvarQRCode = ({type, data})=>{
-    fetch('https://b7dc-2804-7518-49a8-9e00-4c25-8cac-1a66-26b7.ngrok-free.app/api/qrcode', {
+    fetch('https://8589-2804-7518-498a-5b00-1dc-8d73-5bee-757a.ngrok-free.app/api/qrcode', {
       method: 'post',
       headers:{
         'Accept' : 'application/json',
@@ -42,11 +42,8 @@ export default function App() {
   
   //Função para a permissão da camera
   if (!permissaoCamera) {
-    return (
-    <View>
-      <Text>O Acesso a camera foi negada</Text>
-    </View>
-  )
+    return <View/>;
+  
 
   }
   if (!permissaoCamera.granted) {
@@ -55,7 +52,7 @@ export default function App() {
         <Text style={styles.message}>We need your permission to show the camera</Text>
         <Button onPress={setPermissaoCamera} title="grant permission" />
       </View>
-    )
+    );
   }
 
   function toggleCameraFacing() {
@@ -66,6 +63,9 @@ export default function App() {
     setScanned(true);
     salvarQRCode({type, data});
     alert(`QRCode do tipo ${type} e com a informação "${data}" foi salva no banco!`);
+    if(Linking.canOpenURL(data)){
+      Linking.openURL(data)
+    }
 
     
   };
@@ -80,13 +80,19 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <CameraView 
-          onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-          barcodeScannerSettings={{
+      <CameraView style={scanned ? styles.cameraDesabilitada: styles.camera} onBarcodeScanned={scanned ? undefined : handleBarCodeScanned} facing={facing}>
+        <View style={styles.contTitulo}>
+          <Text style={styles.txtTitulo}>Aponte a camera no QRCode</Text>
+        </View>
+        <View style={styles.viewImgIcon}>
+          <Image source={qrcodicon} style={styles.imgQrcodeIcon}></Image>
           
-        }}
-       facing={facing}>
-      
+        </View>
+        < View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
+            <Text style={styles.text}>Mudar Camera</Text>
+          </TouchableOpacity>
+        </View>
       </CameraView>
       {scanned && <Button title={'Clique para escanear de novo'} onPress={()=> setScanned(false)}></Button>}
       <StatusBar style="auto" />
@@ -96,9 +102,74 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    display:'flex',
+    width:'100%',
+    height:'100%',
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  camera:{
+    display:'flex',
+    width:'100%',
+    height:'100%',
+    flexDirection:'column',
+    justifyContent:'center',
+    alignItems:'center',
+    backgroundColor: 'transparent',
+  },
+  cameraDesabilitada:{
+    display:'none',
+  },
+  contTitulo:{
+    display:'flex',
+    width:'100%',
+    height:'auto',
+    justifyContent:'center',
+    alignItems:'center',
+    marginBottom:20,
+  },
+  txtTitulo:{
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: 'white',
+    textAlign:'center'
+  },
+  viewImgIcon:{
+    
+    width:'100%',
+    height:'auto',
+    marginBottom:40,
+    justifyContent:'center',
+    alignItems:'center',
+  },
+  imgQrcodeIcon:{
+    width:350,
+    height:350,
+    resizeMode:'contain',
+  },
+  buttonContainer: {
+    display:'flex',
+    width:'100%',
+    height:'auto',
+    flexDirection: 'row',
+    justifyContent:'center',
+    alignItems:'center',
+
+    
+  },
+  button: {
+    display:'flex',
+    padding:20,
+    backgroundColor:'blue',
+    alignSelf: 'flex-end',
+    alignItems: 'center',
+    borderRadius:10,
+  },
+  text: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    textAlign:'center'
   },
 });
